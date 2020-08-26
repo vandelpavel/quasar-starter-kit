@@ -21,6 +21,12 @@ const { configure } = require('quasar/wrappers');
 
 module.exports = {{#preset.typescript}}configure({{/preset.typescript}}function ({{#preset.lint}}{{#preset.typescript}}ctx{{else}}/* ctx */{{/preset.typescript}}{{else}}/* ctx */{{/preset.lint}}) {
   return {
+
+    ssg: {
+        // add ssg options here, see at https://github.com/freddy38510/quasar-app-extension-ssg?files=1
+        // routes: ['/', '/about', '/users', '/users/someone']
+    },
+
     // https://quasar.dev/quasar-cli/supporting-ts
     supportTS: {{#if preset.typescript}}{{#if preset.lint}}{
       tsCheckerConfig: {
