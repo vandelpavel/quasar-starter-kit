@@ -1,8 +1,8 @@
-const path = require('path')
-const fs = require('fs')
-const spawn = require('child_process').spawn
+const path = require('path');
+const fs = require('fs');
+const spawn = require('child_process').spawn;
 
-const lintStyles = ['standard', 'airbnb', 'prettier']
+const lintStyles = ['standard', 'airbnb', 'prettier'];
 
 /**
  * Sorts dependencies in package.json alphabetically.
@@ -13,21 +13,21 @@ function sortDependencies(data) {
   const pkgFile = path.join(
     data.inPlace ? '' : data.destDirName,
     'package.json'
-  )
-  let sorted = false
-  const pkg = JSON.parse(fs.readFileSync(pkgFile))
+  );
+  let sorted = false;
+  const pkg = JSON.parse(fs.readFileSync(pkgFile));
 
   if (pkg.dependencies) {
-    sorted = true
-    pkg.dependencies = sortObject(pkg.dependencies)
+    sorted = true;
+    pkg.dependencies = sortObject(pkg.dependencies);
   }
   if (pkg.devDependencies) {
-    sorted = true
-    pkg.devDependencies = sortObject(pkg.devDependencies)
+    sorted = true;
+    pkg.devDependencies = sortObject(pkg.devDependencies);
   }
 
   if (sorted) {
-    fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n')
+    fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n');
   }
 }
 
@@ -37,8 +37,17 @@ function sortDependencies(data) {
  * @param {object} data Data from questionnaire
  */
 function installDependencies(cwd, executable = 'npm', color) {
-  console.log(`\n\n ${color('[*] Installing project dependencies ...')}\n`)
-  return runCommand(executable, ['install'], { cwd })
+  console.log(`\n\n ${color('[*] Installing project dependencies ...')}\n`);
+  return runCommand(executable, ['install'], { cwd });
+}
+
+/**
+ * Install all the selected app esxtension from preInstalledAppExtensions
+ * @param {string} cwd Path of the created project directory
+ * @param {object} data Data from questionnaire
+ */
+function installAppExtension(cwd, arg) {
+  return runCommand('quasar ext add', [arg], { cwd });
 }
 
 /**
@@ -52,16 +61,16 @@ function runLintFix(cwd, data, color) {
       `\n\n ${color(
         '[*] Running eslint --fix to comply with chosen preset rules...'
       )}\n\n`
-    )
+    );
     const args =
       data.autoInstall === 'npm'
         ? ['run', 'lint', '--', '--fix']
-        : ['run', 'lint', '--fix']
+        : ['run', 'lint', '--fix'];
     return runCommand(data.autoInstall, args, {
       cwd,
-    })
+    });
   }
-  return Promise.resolve()
+  return Promise.resolve();
 }
 
 /**
@@ -74,7 +83,7 @@ function lintMsg(data) {
     data.lint &&
     lintStyles.indexOf(data.lintConfig) !== -1
     ? 'npm run lint -- --fix (or for yarn: yarn run lint --fix)\n  '
-    : ''
+    : '';
 }
 
 /**
@@ -105,8 +114,8 @@ Please give us a star on Github if you appreciate our work:
 https://github.com/quasarframework/quasar
 
 Enjoy! - Quasar Team
-`
-  console.log(message)
+`;
+  console.log(message);
 }
 
 /**
@@ -115,7 +124,7 @@ Enjoy! - Quasar Team
  * @param {Object} data Data from the questionnaire
  */
 function installMsg(data) {
-  return !data.autoInstall ? 'npm install (or if using yarn: yarn)\n  ' : ''
+  return !data.autoInstall ? 'npm install (or if using yarn: yarn)\n  ' : '';
 }
 
 /**
@@ -139,53 +148,104 @@ function runCommand(cmd, args, options) {
         },
         options
       )
-    )
+    );
 
-    spwan.on('exit', code => {
+    spwan.on('exit', (code) => {
       if (code) {
-        console.log()
-        console.log(` ${cmd} install FAILED... Possible temporary npm registry issues?`)
-        console.log(` Please try again later...`)
-        console.log()
-        process.exit(1)
+        console.log();
+        console.log(
+          ` ${cmd} install FAILED... Possible temporary npm registry issues?`
+        );
+        console.log(` Please try again later...`);
+        console.log();
+        process.exit(1);
       }
 
-      resolve()
-    })
-  })
+      resolve();
+    });
+  });
 }
 
 function sortObject(object) {
   // Based on https://github.com/yarnpkg/yarn/blob/v1.3.2/src/config.js#L79-L85
-  const sortedObject = {}
+  const sortedObject = {};
   Object.keys(object)
     .sort()
-    .forEach(item => {
-      sortedObject[item] = object[item]
-    })
-  return sortedObject
+    .forEach((item) => {
+      sortedObject[item] = object[item];
+    });
+  return sortedObject;
 }
 
 module.exports.complete = function (data, { chalk }) {
-  const green = chalk.green
+  const green = chalk.green;
+  const yellow = chalk.yellow;
 
-  sortDependencies(data, green)
+  sortDependencies(data, green);
 
-  const cwd = path.join(process.cwd(), data.inPlace ? '' : data.destDirName)
+  const cwd = path.join(process.cwd(), data.inPlace ? '' : data.destDirName);
+  const mapAppExtension = {
+    ssg: {
+      addExtension:
+        'yarn add --dev https://github.com/freddy38510/quasar-app-extension-ssg',
+      invokeExtension: 'quasar ext invoke ssg',
+    },
+    animate: '@dreamonkey/animate',
+  };
 
   if (data.autoInstall) {
     installDependencies(cwd, data.autoInstall, green)
       .then(() => {
-        return runLintFix(cwd, data, green)
+        console.log(`\n\n ${yellow('[*] Installing  app extensions: ...')}\n`);
+
+        // return installAppExtension(cwd, mapAppExtension['animate']);
+
+        const myExtensionsObj = data.preInstalledAppExtensions;
+        const extensionsNames = [];
+
+        for (const name in myExtensionsObj) {
+          if (myExtensionsObj.hasOwnProperty(name)) {
+            extensionsNames.push(name);
+          }
+        }
+
+        console.log(extensionsNames);
+
+        return extensionsNames.reduce((previousPromise, nextExtension) => {
+          return previousPromise.then(() => {
+            // This is a work around that will add ssg extension even if not published
+            if (nextExtension === 'ssg') {
+              return runCommand(
+                mapAppExtension[nextExtension].addExtension,
+                [''],
+                {
+                  cwd,
+                }
+              ).then(() => {
+                return runCommand(
+                  mapAppExtension[nextExtension].invokeExtension,
+                  [''],
+                  {
+                    cwd,
+                  }
+                );
+              });
+            } else {
+              return installAppExtension(cwd, mapAppExtension['animate']);
+            }
+          });
+        }, Promise.resolve());
       })
       .then(() => {
-        printMessage(data, green)
+        return runLintFix(cwd, data, green);
       })
-      .catch(e => {
-        console.log(chalk.red('Error:'), e)
+      .then(() => {
+        printMessage(data, green);
       })
+      .catch((e) => {
+        console.log(chalk.red('Error:'), e);
+      });
+  } else {
+    printMessage(data, chalk);
   }
-  else {
-    printMessage(data, chalk)
-  }
-}
+};

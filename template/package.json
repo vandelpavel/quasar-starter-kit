@@ -20,12 +20,15 @@
     "@quasar/extras": "^1.0.0",
     "core-js": "^3.6.5",
     "quasar": "^1.0.0",
-    "stylelint-config-standard": "^20.0.0"
+    "stylelint": "^13.6.1",
+    "stylelint-config-sass-guidelines": "^7.0.0",
+    "stylelint-config-standard": "^20.0.0",
+    "vue-svg-inline-loader": "^1.5.0"
 
   },
   "devDependencies": {
-    {{#preset.animate}}"@dreamonkey/quasar-app-extension-animate": "^0.0.5",{{/preset.animate}}
-    {{#preset.ssg}}"quasar-app-extension-ssg": "https://github.com/freddy38510/quasar-app-extension-ssg",{{/preset.ssg}}
+    {{#preInstalledAppExtensions.animate}}"@dreamonkey/quasar-app-extension-animate": "^0.0.5",{{/preInstalledAppExtensions.animate}}
+    {{#preInstalledAppExtensions.ssg}}"quasar-app-extension-ssg": "https://github.com/freddy38510/quasar-app-extension-ssg",{{/preInstalledAppExtensions.ssg}}
     {{#preset.lint}}
     "babel-eslint": "^10.0.1",
     "eslint": "^6.8.0",
